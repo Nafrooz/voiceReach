@@ -1,0 +1,133 @@
+{
+  "documents": [
+    {
+      "id": "seed-1",
+      "text": "Welcome to VoiceReach. This is placeholder seed knowledge.",
+      "metadata": { "source": "seed_data" }
+    }
+  ]
+}
+
+[
+  {
+    "text": "Fever with chills for more than 2 days can be malaria or dengue. Drink clean water, rest, and avoid self-medicines like strong antibiotics. If there is bleeding, severe weakness, or trouble breathing, go to the nearest PHC or government hospital the same day.",
+    "source": "seed-hackathon",
+    "domain": "healthcare",
+    "language": "en"
+  },
+  {
+    "text": "For cough and cold, most cases get better in 5 to 7 days. Take warm fluids, rest, and keep away from smoke. If you have high fever, chest pain, fast breathing, or the cough lasts more than 2 weeks, visit a doctor to rule out pneumonia or TB.",
+    "source": "seed-hackathon",
+    "domain": "healthcare",
+    "language": "en"
+  },
+  {
+    "text": "If a pregnant woman misses check-ups, talk to the ASHA or ANM in your village. Regular ANC visits help check blood pressure, anemia, and baby growth. Ask about free iron tablets, TT injections, and the nearest government facility for delivery support.",
+    "source": "seed-hackathon",
+    "domain": "healthcare",
+    "language": "en"
+  },
+  {
+    "text": "For children under 5, danger signs are very fast breathing, chest in-drawing, not drinking, repeated vomiting, or fits. Do not wait at home. Go to the nearest PHC or government hospital and carry the child’s health card if you have it.",
+    "source": "seed-hackathon",
+    "domain": "healthcare",
+    "language": "en"
+  },
+  {
+    "text": "Anemia is common and can cause tiredness, dizziness, and pale skin. Eat iron-rich foods like green leafy vegetables, jaggery, chana, and eggs if you eat them. Pregnant women should take IFA tablets given by the government and follow up with ASHA/ANM.",
+    "source": "seed-hackathon",
+    "domain": "healthcare",
+    "language": "en"
+  },
+  {
+    "text": "PM-JAY (Ayushman Bharat) can help eligible families get cashless treatment in empanelled hospitals. Keep your Ayushman card or Aadhaar. Before admission, confirm the hospital is empanelled and ask the Ayushman help desk about covered procedures and documents.",
+    "source": "seed-hackathon",
+    "domain": "healthcare",
+    "language": "en"
+  },
+  {
+    "text": "If you have diabetes, check sugar regularly and do not stop medicines suddenly. If you feel very thirsty, frequent urination, blurred vision, or wounds not healing, see a doctor. Many government hospitals provide basic tests and medicines at low cost.",
+    "source": "seed-hackathon",
+    "domain": "healthcare",
+    "language": "en"
+  },
+  {
+    "text": "ASHA workers can guide you for immunization, family planning, and government health schemes. If you are unsure about vaccines, ask for the child’s immunization schedule and next due date. Keeping the vaccination card safe helps you avoid missed doses.",
+    "source": "seed-hackathon",
+    "domain": "healthcare",
+    "language": "en"
+  },
+  {
+    "text": "PM-Kisan gives income support to eligible farmer families. If payment is stopped, check if e-KYC, Aadhaar linking, or land record issues are pending. You can update details at a CSC center or through the PM-Kisan portal with help from your local office.",
+    "source": "seed-hackathon",
+    "domain": "government",
+    "language": "en"
+  },
+  {
+    "text": "Aadhaar update like mobile number or address usually needs a visit to an Aadhaar center. Carry Aadhaar and valid address proof if needed. Do not pay extra to agents. Take the update receipt (URN) so you can track status later.",
+    "source": "seed-hackathon",
+    "domain": "government",
+    "language": "en"
+  },
+  {
+    "text": "For ration card issues, first check if your family details are correct in the state PDS list. If a name is missing, apply for correction at the ration office or through a CSC. Keep Aadhaar, family photo, and address proof ready as per your state rules.",
+    "source": "seed-hackathon",
+    "domain": "government",
+    "language": "en"
+  },
+  {
+    "text": "If your ration is not given properly, note the date and quantity, and raise a complaint with the local ration office or helpline. You can also ask for the grievance process at the FPS shop. Keep your ration card number and mobile number ready.",
+    "source": "seed-hackathon",
+    "domain": "government",
+    "language": "en"
+  },
+  {
+    "text": "For Aadhaar-based bank linking, ensure the mobile number is correct and the bank has seeded Aadhaar properly. If you are not receiving DBT benefits, visit the bank branch or BC (bank mitra) and ask them to check Aadhaar seeding and NPCI mapping.",
+    "source": "seed-hackathon",
+    "domain": "government",
+    "language": "en"
+  },
+  {
+    "text": "If you need a certificate like income, caste, or residence, ask your Gram Sachiv or local office about required documents. Many states allow online application through e-Seva/Meeseva/CSC. Always keep an acknowledgement slip to track your application.",
+    "source": "seed-hackathon",
+    "domain": "government",
+    "language": "en"
+  },
+  {
+    "text": "Jan Dhan accounts are basic bank accounts with low minimum balance and support for government benefit transfers. If you do not have one, carry Aadhaar and PAN (if available) to a bank or BC point. Ask for a RuPay card and set a safe PIN.",
+    "source": "seed-hackathon",
+    "domain": "finance",
+    "language": "en"
+  },
+  {
+    "text": "KYC means confirming your identity for bank services. Usually Aadhaar, PAN, and a photo are used. If your bank asks for KYC update, do it soon to avoid account limits. Never share OTP or PIN with anyone, even if they say they are from the bank.",
+    "source": "seed-hackathon",
+    "domain": "finance",
+    "language": "en"
+  },
+  {
+    "text": "UPI can send money using a phone number or UPI ID. Before sending, confirm the name shown on the screen matches the person. Start with a small amount if you are unsure. If a payment is stuck, check your bank app status and keep the UTR number.",
+    "source": "seed-hackathon",
+    "domain": "finance",
+    "language": "en"
+  },
+  {
+    "text": "If someone calls and says your bank account will be blocked, be careful. Banks do not ask for OTP, PIN, or remote app install. Cut the call and contact the bank using the number on your passbook or official website. Report fraud quickly to 1930.",
+    "source": "seed-hackathon",
+    "domain": "finance",
+    "language": "en"
+  },
+  {
+    "text": "Many scholarships for students are available through state portals and the National Scholarship Portal. Keep Aadhaar, bank account details, school ID, and marksheets ready. Apply before the deadline and save the application number for tracking.",
+    "source": "seed-hackathon",
+    "domain": "education",
+    "language": "en"
+  },
+  {
+    "text": "Skill India training can help with jobs in areas like tailoring, electrician work, or computer basics. Ask at a local training center or CSC about courses near you. Choose a course with placement support and keep your ID documents ready for enrollment.",
+    "source": "seed-hackathon",
+    "domain": "education",
+    "language": "en"
+  }
+]
+
