@@ -1,33 +1,119 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from uuid import uuid4
 
+from qdrant_client import AsyncQdrantClient
+from qdrant_client.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    MatchValue,
+    PointStruct,
+    ScoredPoint,
+    VectorParams,
+)
 
-@dataclass(frozen=True)
-class QdrantMatch:
-    id: str
-    score: float
-    payload: dict[str, object]
-
+from app.config import get_settings
 
 class QdrantService:
+    def __init__(self, settings):
+        self._client = AsyncQdrantClient(url=settings.QDRANT_URL, api_key=settings.QDRANT_API_KEY)
+        self._settings = settings
+
+    async def create_collections(self) -> None:
+        """Call at app startup via lifespan."""
+        for name in [self._settings.COLLECTION_KNOWLEDGE, self._settings.COLLECTION_SESSIONS]:
+            exists = await self._client.collection_exists(name)
+            if not exists:
+                await self._client.create_collection(
+                    collection_name=name,
+                    vectors_config=VectorParams(
+                        size=self._settings.VECTOR_SIZE,
+                        distance=Distance.COSINE,
+                    ),
+                )
+
+    async def upsert_documents(self, docs: list[dict]) -> int:
+        """docs: [{vector, text, source, domain, language}]"""
+        points = [
+            PointStruct(
+                id=str(uuid4()),
+                vector=d["vector"],
+                payload={k: v for k, v in d.items() if k != "vector"},
+            )
+            for d in docs
+        ]
+
+        # Batch in 100s
+        for i in range(0, len(points), 100):
+            await self._client.upsert(
+                collection_name=self._settings.COLLECTION_KNOWLEDGE,
+                points=points[i : i + 100],
+            )
+
+        return len(points)
+
+    async def semantic_search(
+        self,
+        query_vector: list[float],
+        domain: str | None = None,
+        top_k: int = 5,
+        score_threshold: float = 0.55,
+    ) -> list[ScoredPoint]:
+        filt = (
+            Filter(must=[FieldCondition(key="domain", match=MatchValue(value=domain))])
+            if domain
+            else None
+        )
+        return await self._client.search(
+            collection_name=self._settings.COLLECTION_KNOWLEDGE,
+            query_vector=query_vector,
+            limit=top_k,
+            score_threshold=score_threshold,
+            query_filter=filt,
+            with_payload=True,
+        )
+
+    async def store_session(self, user_id, query, response, vector, domain, language):
+        from datetime import datetime
+
+        point = PointStruct(
+            id=str(uuid4()),
+            vector=vector,
+            payload={
+                "user_id": user_id,
+                "query": query,
+                "response": response,
+                "domain": domain,
+                "language": language,
+                "timestamp": datetime.utcnow().isoformat(),
+            },
+        )
+        await self._client.upsert(
+            collection_name=self._settings.COLLECTION_SESSIONS,
+            points=[point],
+        )
+
+    async def get_user_history(self, user_id: str, limit: int = 3) -> list[dict]:
+        results, _ = await self._client.scroll(
+            collection_name=self._settings.COLLECTION_SESSIONS,
+            scroll_filter=Filter(
+                must=[FieldCondition(key="user_id", match=MatchValue(value=user_id))]
+            ),
+            limit=limit,
+            with_payload=True,
+        )
+        return [r.payload for r in results]
+
+
+_service: QdrantService | None = None
+
+
+def get_qdrant_service() -> QdrantService:
     """
-    Placeholder Qdrant integration.
-
-    Wire this to an actual Qdrant client (e.g. `qdrant-client`) when ready.
+    FastAPI dependency that returns a cached service instance.
     """
-
-    def __init__(self, url: str, collection: str):
-        self.url = url
-        self.collection = collection
-
-    async def upsert_texts(self, texts: list[str], metadatas: list[dict[str, object]] | None = None) -> int:
-        _ = (texts, metadatas)
-        return 0
-
-    async def search(self, vector: list[float], top_k: int = 5) -> list[QdrantMatch]:
-        _ = (vector, top_k)
-        return []
-
-    async def reset_collection(self) -> None:
-        return None
+    global _service
+    if _service is None:
+        _service = QdrantService(get_settings())
+    return _service
