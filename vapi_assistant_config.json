@@ -1,0 +1,41 @@
+{
+  "name": "VoiceReach Assistant",
+  "model": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "systemPrompt": "You are a helpful voice assistant for VoiceReach. When a user asks ANY question about government schemes, healthcare, or finance, ALWAYS call the query_knowledge_base function. Do not answer from your own knowledge — always use the function.",
+    "functions": [
+      {
+        "name": "query_knowledge_base",
+        "description": "Search VoiceReach knowledge base for accurate information about government schemes, healthcare, and financial services in India",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The user's question exactly as spoken"
+            },
+            "user_id": {
+              "type": "string",
+              "description": "Unique identifier for this user/caller"
+            }
+          },
+          "required": ["query"]
+        }
+      }
+    ]
+  },
+  "voice": {
+    "provider": "11labs",
+    "voiceId": "rachel"
+  },
+  "transcriber": {
+    "provider": "deepgram",
+    "model": "nova-2",
+    "language": "multi"
+  },
+  "serverUrl": "https://YOUR-RAILWAY-URL.railway.app/api/v1/webhook/vapi",
+  "firstMessage": "Namaste! Main VoiceReach hun. Aap koi bhi sawaal pooch sakte hain — government yojanaon ke baare mein, health ke baare mein, ya paise ke baare mein. Main aapki madad karunga. Aap kya jaanna chahte hain?",
+  "endCallMessage": "Dhanyawad. Agar aur koi sawaal ho toh dobara call karein. Jai Hind!"
+}
+
