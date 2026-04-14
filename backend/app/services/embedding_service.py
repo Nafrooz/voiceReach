@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import time
 
+from sentence_transformers import SentenceTransformer
+
 
 class EmbeddingService:
     """
@@ -10,8 +12,6 @@ class EmbeddingService:
     """
 
     def __init__(self):
-        from sentence_transformers import SentenceTransformer
-
         t0 = time.perf_counter()
         # Load once at startup — model cached on disk after first run
         self._model = SentenceTransformer(

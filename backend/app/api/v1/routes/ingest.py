@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from pathlib import Path
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -85,8 +86,8 @@ async def seed_knowledge_base(
     qdrant_svc=Depends(get_qdrant_service),
 ):
     try:
-        with open("data/knowledge_base/seed_data.json") as f:
-            items = json.load(f)
+        seed_path = Path(__file__).resolve().parents[5] / "data" / "knowledge_base" / "seed_data.json"
+        items = json.loads(seed_path.read_text(encoding="utf-8"))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -110,12 +111,3 @@ async def seed_knowledge_base(
         ]
         total += await qdrant_svc.upsert_documents(docs)
     return {"total_chunks_ingested": total, "documents_processed": len(items)}
-
-
-@router.post("/ingest/reset", response_model=IngestResponse)
-async def reset_ingest_index() -> IngestResponse:
-    """
-    Reset/clear the knowledge base index (placeholder).
-    """
-    return IngestResponse(ok=True, ingested=0)
-
