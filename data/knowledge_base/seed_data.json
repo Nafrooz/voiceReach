@@ -1,131 +1,115 @@
-{
-  "documents": [
-    {
-      "id": "seed-1",
-      "text": "Welcome to VoiceReach. This is placeholder seed knowledge.",
-      "metadata": { "source": "seed_data" }
-    }
-  ]
-}
-
 [
   {
-    "text": "Fever with chills for more than 2 days can be malaria or dengue. Drink clean water, rest, and avoid self-medicines like strong antibiotics. If there is bleeding, severe weakness, or trouble breathing, go to the nearest PHC or government hospital the same day.",
-    "source": "seed-hackathon",
+    "text": "PM-JAY (Ayushman Bharat) is a government health insurance scheme that can give eligible families cashless treatment for hospital care. Many families qualify if they are listed in the SECC database or have an Ayushman card. A simple rule of thumb many people use is annual family income below about 5 lakh, but the safest way is to check your name officially. You can check eligibility on pmjay.gov.in or by visiting an Ayushman help desk at an empanelled hospital or a nearby Common Service Centre (CSC). If eligible, the cover is up to 5 lakh per family per year for hospitalization and certain procedures. It does not cover everything, so always ask the hospital’s Ayushman desk what is included before admission. Keep Aadhaar and a mobile number handy for verification. If someone asks for money to “activate” it, be careful and verify through official channels.",
+    "source": "https://pmjay.gov.in/",
     "domain": "healthcare",
     "language": "en"
   },
   {
-    "text": "For cough and cold, most cases get better in 5 to 7 days. Take warm fluids, rest, and keep away from smoke. If you have high fever, chest pain, fast breathing, or the cough lasts more than 2 weeks, visit a doctor to rule out pneumonia or TB.",
-    "source": "seed-hackathon",
+    "text": "If you want to use PM-JAY at a hospital, first confirm the hospital is empanelled under Ayushman Bharat. You can search hospitals on pmjay.gov.in or ask at the Ayushman Mitra help desk in the hospital. Carry your Aadhaar card and any Ayushman card details you have. At the help desk, tell them your problem and ask if the treatment is covered under the scheme. The scheme can cover many common surgeries and hospital stays up to 5 lakh per year, but there can be rules about packages and documents. Always ask for a written estimate and what you may need to pay (if anything). If the hospital asks you to pay cash for something that should be covered, ask them to explain clearly and request to speak to the Ayushman desk again. If you feel stuck, a nearby CSC can help you check eligibility and guide you on the process.",
+    "source": "https://pmjay.gov.in/",
     "domain": "healthcare",
     "language": "en"
   },
   {
-    "text": "If a pregnant woman misses check-ups, talk to the ASHA or ANM in your village. Regular ANC visits help check blood pressure, anemia, and baby growth. Ask about free iron tablets, TT injections, and the nearest government facility for delivery support.",
-    "source": "seed-hackathon",
+    "text": "ASHA workers (Accredited Social Health Activists) are local women trained to help families with basic health support. They can guide you on pregnancy check-ups, child vaccinations, nutrition advice, and government health schemes like immunization and institutional delivery support. If you are pregnant, an ASHA can remind you about ANC visits, iron tablets, and where to go for safe delivery. If your child missed vaccines, she can tell you the next due date and the nearest session site. ASHA workers also help with family planning information and may help you reach the ANM or doctor at the Primary Health Centre (PHC). To contact an ASHA in your village, ask the Anganwadi centre, your Gram Panchayat office, or the ASHA’s phone number from neighbors. If you are new to the village, tell the ASHA your address and family details so she can include you in routine health visits.",
+    "source": "https://nhm.gov.in/",
     "domain": "healthcare",
     "language": "en"
   },
   {
-    "text": "For children under 5, danger signs are very fast breathing, chest in-drawing, not drinking, repeated vomiting, or fits. Do not wait at home. Go to the nearest PHC or government hospital and carry the child’s health card if you have it.",
-    "source": "seed-hackathon",
+    "text": "Jan Aushadhi (Pradhan Mantri Bhartiya Janaushadhi Pariyojana) stores sell quality generic medicines at lower prices. If your doctor wrote a brand-name medicine, you can ask the doctor or pharmacist if a generic version is available with the same salt (active ingredient). At a Jan Aushadhi store, show your prescription and ask for the medicine by salt name. You can find nearby stores by searching online for “Jan Aushadhi Kendra near me” or asking at your local government hospital and PHC, where staff often know the nearest store. Always check the expiry date and keep medicines in a cool, dry place. If you have a chronic condition like BP or diabetes, buying monthly medicines from Jan Aushadhi can reduce cost a lot. If you are unsure, ask the pharmacist to explain when and how to take the medicine in simple steps.",
+    "source": "https://janaushadhi.gov.in/",
     "domain": "healthcare",
     "language": "en"
   },
   {
-    "text": "Anemia is common and can cause tiredness, dizziness, and pale skin. Eat iron-rich foods like green leafy vegetables, jaggery, chana, and eggs if you eat them. Pregnant women should take IFA tablets given by the government and follow up with ASHA/ANM.",
-    "source": "seed-hackathon",
+    "text": "For a common cold, sore throat, and mild fever, many people can recover at home in about 5 to 7 days. Rest, drink warm fluids, and eat light food. You can use safe home steps like warm water gargles for sore throat and steam inhalation for blocked nose. Avoid unnecessary antibiotics because they do not cure viral cold and can cause side effects. However, you should see a doctor soon if you have high fever for more than 2 days, chest pain, fast breathing, severe weakness, or if you have asthma, heart disease, pregnancy, or very old age. Also visit a doctor if cough lasts more than 2 weeks, because it could be something serious like TB. If you notice signs like bleeding, confusion, or difficulty breathing, go to the nearest PHC or government hospital the same day.",
+    "source": "https://nhm.gov.in/",
     "domain": "healthcare",
     "language": "en"
   },
   {
-    "text": "PM-JAY (Ayushman Bharat) can help eligible families get cashless treatment in empanelled hospitals. Keep your Ayushman card or Aadhaar. Before admission, confirm the hospital is empanelled and ask the Ayushman help desk about covered procedures and documents.",
-    "source": "seed-hackathon",
+    "text": "If you have fever with severe body pain, rash, or bleeding from gums/nose, it could be dengue, and you should not delay care. Drink clean water and ORS, rest, and avoid self-medication with painkillers like ibuprofen or aspirin unless a doctor says so, because some medicines can increase bleeding risk. If fever continues beyond 2 days, you feel dizzy, have stomach pain, vomiting, or black stools, go to a government hospital or PHC for tests. For malaria-like fever with chills and sweating, a blood test is needed. Do not depend only on home remedies when warning signs appear. Keep a note of when fever started and any medicines taken. If the patient is a child, elderly, pregnant, or has other illness, seek care earlier. Government facilities can guide you and provide tests at low cost or free in many areas.",
+    "source": "https://nhm.gov.in/",
     "domain": "healthcare",
     "language": "en"
   },
   {
-    "text": "If you have diabetes, check sugar regularly and do not stop medicines suddenly. If you feel very thirsty, frequent urination, blurred vision, or wounds not healing, see a doctor. Many government hospitals provide basic tests and medicines at low cost.",
-    "source": "seed-hackathon",
+    "text": "Pregnancy care is safer when you do regular check-ups at the PHC or government hospital. During ANC visits, doctors check blood pressure, anemia, baby growth, and give advice on nutrition. You may get free iron and folic acid tablets and vaccines like TT/Td as per schedule. If you feel severe headache, swelling of face/hands, heavy bleeding, severe stomach pain, or reduced baby movement, go to the hospital immediately. You can ask your village ASHA worker or Anganwadi worker about the next ANC camp date and the best facility for delivery. Many states also support free ambulance services for pregnant women; ask your ASHA for the local number. Keep your Mother and Child Protection (MCP) card safe. It helps health staff understand your history and prevents missed services.",
+    "source": "https://nhm.gov.in/",
     "domain": "healthcare",
     "language": "en"
   },
   {
-    "text": "ASHA workers can guide you for immunization, family planning, and government health schemes. If you are unsure about vaccines, ask for the child’s immunization schedule and next due date. Keeping the vaccination card safe helps you avoid missed doses.",
-    "source": "seed-hackathon",
+    "text": "Vaccination protects children from serious diseases like polio, measles, and diphtheria. In India, government vaccination is available through PHCs and outreach sessions, usually free. Keep the child’s vaccination card (MCP card) and bring it every time, so the nurse can mark the next due date. If you missed a vaccine, do not worry—most vaccines can be caught up. Ask the ASHA or ANM when the next immunization day is in your village or nearest sub-centre. If your child has mild cold, vaccines are usually still safe, but if there is high fever or severe illness, the nurse may advise waiting. After vaccination, mild fever or pain at the injection site can happen; give comfort, fluids, and follow the nurse’s advice. If you see severe allergic reaction, breathing trouble, or continuous high fever, go to the hospital urgently.",
+    "source": "https://nhm.gov.in/",
     "domain": "healthcare",
     "language": "en"
   },
   {
-    "text": "PM-Kisan gives income support to eligible farmer families. If payment is stopped, check if e-KYC, Aadhaar linking, or land record issues are pending. You can update details at a CSC center or through the PM-Kisan portal with help from your local office.",
-    "source": "seed-hackathon",
+    "text": "PM Kisan Samman Nidhi gives eligible farmer families income support of 6,000 per year, usually paid in 3 instalments of 2,000. If you want to register or check your status, the official portal is pmkisan.gov.in. You may need Aadhaar, mobile number, bank account details, and land record information as per your state process. If payments stop, common reasons include incomplete e-KYC, bank account mismatch, Aadhaar not linked properly, or land record issues. You can complete e-KYC on the portal if you have OTP access, or you can visit a Common Service Centre (CSC) for biometric e-KYC help. Always keep your PM Kisan registration number or Aadhaar handy when checking status. If someone asks for money to “release” instalments, avoid it and use only the portal or CSC.",
+    "source": "https://pmkisan.gov.in/",
     "domain": "government",
     "language": "en"
   },
   {
-    "text": "Aadhaar update like mobile number or address usually needs a visit to an Aadhaar center. Carry Aadhaar and valid address proof if needed. Do not pay extra to agents. Take the update receipt (URN) so you can track status later.",
-    "source": "seed-hackathon",
+    "text": "A ration card helps families access subsidized food grains through the Public Distribution System (PDS). The exact rules depend on your state, but in many places you can apply online on the state e-district portal or through a Common Service Centre (CSC). Usually you need Aadhaar cards of family members, a passport photo, address proof (like electricity bill or rental agreement), and sometimes income proof. If you recently moved, ask about adding your name or transferring the card. After applying, you get an acknowledgement or application number—save it to track status. If your family details are wrong, request a correction. If you face problems at the fair price shop, note the date, quantity, and shop name, and file a complaint using the state helpline or local ration office. Always use official portals and keep copies of documents.",
+    "source": "https://services.india.gov.in/",
     "domain": "government",
     "language": "en"
   },
   {
-    "text": "For ration card issues, first check if your family details are correct in the state PDS list. If a name is missing, apply for correction at the ration office or through a CSC. Keep Aadhaar, family photo, and address proof ready as per your state rules.",
-    "source": "seed-hackathon",
+    "text": "Aadhaar is a 12-digit identity number used for many services like bank accounts and government benefits. If you want to update your mobile number, you generally need to visit an Aadhaar enrolment or update centre in person. Carry your Aadhaar card and ask the operator to update the mobile number linked to Aadhaar. After the update, you will get a receipt with an Update Request Number (URN). Keep it safe so you can track the status. To find the nearest centre, you can search “Aadhaar enrolment centre” online or ask at your local CSC. Be careful about agents who charge extra or promise instant updates without a receipt. If you are updating address, you may need valid address proof. Once your mobile is linked, you can use OTP services on many government portals safely, but never share your OTP with anyone.",
+    "source": "https://uidai.gov.in/",
     "domain": "government",
     "language": "en"
   },
   {
-    "text": "If your ration is not given properly, note the date and quantity, and raise a complaint with the local ration office or helpline. You can also ask for the grievance process at the FPS shop. Keep your ration card number and mobile number ready.",
-    "source": "seed-hackathon",
+    "text": "A Common Service Centre (CSC) is a local help point where you can get digital services without needing a smartphone or laptop. CSCs often help with Aadhaar services (where permitted), PAN-related guidance, PM Kisan registration and e-KYC, downloading certificates, applying for ration card services (state dependent), paying utility bills, printing documents, and more. If you are not comfortable using online portals, a CSC operator can guide you step by step. Always ask for the official receipt or acknowledgement number for any application or payment. Do not share your bank OTP or PIN with anyone; CSC services should not require your UPI PIN. To find the nearest CSC, you can ask your Gram Panchayat office, local post office, or search for “CSC near me”. If you suspect overcharging, ask for a printed rate list and keep proof of payment.",
+    "source": "https://csc.gov.in/",
     "domain": "government",
     "language": "en"
   },
   {
-    "text": "For Aadhaar-based bank linking, ensure the mobile number is correct and the bank has seeded Aadhaar properly. If you are not receiving DBT benefits, visit the bank branch or BC (bank mitra) and ask them to check Aadhaar seeding and NPCI mapping.",
-    "source": "seed-hackathon",
+    "text": "If your DBT (Direct Benefit Transfer) money is not coming into your bank account, first check if your bank account is active and your mobile number is correct. Many DBT payments depend on Aadhaar seeding and NPCI mapping. Go to your bank branch or a bank mitra (BC point) and ask them to check if your Aadhaar is linked (seeded) to the bank account and if it is mapped in NPCI for DBT. If it is not mapped, request them to do it and ask when it will take effect. Also check that your name, Aadhaar number, and bank account details match the scheme records. For PM Kisan, also check e-KYC status. Keep your Aadhaar and passbook with you. Avoid people who promise to “fix” DBT for money; use the bank, scheme portal, or CSC.",
+    "source": "https://services.india.gov.in/",
     "domain": "government",
     "language": "en"
   },
   {
-    "text": "If you need a certificate like income, caste, or residence, ask your Gram Sachiv or local office about required documents. Many states allow online application through e-Seva/Meeseva/CSC. Always keep an acknowledgement slip to track your application.",
-    "source": "seed-hackathon",
-    "domain": "government",
-    "language": "en"
-  },
-  {
-    "text": "Jan Dhan accounts are basic bank accounts with low minimum balance and support for government benefit transfers. If you do not have one, carry Aadhaar and PAN (if available) to a bank or BC point. Ask for a RuPay card and set a safe PIN.",
-    "source": "seed-hackathon",
+    "text": "Jan Dhan Yojana helps people open a basic bank account with low or zero minimum balance in many banks. It can be used to receive government benefits directly, and you usually get a RuPay debit card. In some cases, there can be an overdraft facility up to about 5,000 after the account is used properly and eligibility rules are met. To open an account, visit a nearby bank branch or bank mitra (BC point). Carry Aadhaar for identity and address, and PAN if you have it. If you do not have PAN, banks may still open the account with other rules, but ask clearly. Set a strong PIN for the RuPay card and never share it. Keep your passbook safe and update it regularly. If you do not understand any form, ask the staff to explain in simple words before signing.",
+    "source": "https://pmjdy.gov.in/",
     "domain": "finance",
     "language": "en"
   },
   {
-    "text": "KYC means confirming your identity for bank services. Usually Aadhaar, PAN, and a photo are used. If your bank asks for KYC update, do it soon to avoid account limits. Never share OTP or PIN with anyone, even if they say they are from the bank.",
-    "source": "seed-hackathon",
+    "text": "UPI (Unified Payments Interface) lets you send and receive money using your phone and a UPI app linked to your bank account. You can send money using a UPI ID, QR code, or sometimes a phone number. When you pay, always check the name shown on the screen matches the person or shop you want to pay. Start with a small test payment if you are unsure. Never share your UPI PIN, OTP, or screen-sharing with anyone. A common scam is someone sending you a “collect request” and asking you to enter your PIN; entering the PIN will send money out. If money is stuck, check the transaction status in your app and note the UTR/reference number. If you suspect fraud, report quickly on the national cyber helpline 1930 and inform your bank.",
+    "source": "https://www.npci.org.in/what-we-do/upi/product-overview",
     "domain": "finance",
     "language": "en"
   },
   {
-    "text": "UPI can send money using a phone number or UPI ID. Before sending, confirm the name shown on the screen matches the person. Start with a small amount if you are unsure. If a payment is stuck, check your bank app status and keep the UTR number.",
-    "source": "seed-hackathon",
+    "text": "KYC means “Know Your Customer.” Banks and financial companies ask for KYC to confirm your identity and reduce fraud. This is why they may ask for documents when you open an account, take a loan, or even update an old account. Common KYC documents include Aadhaar, PAN, a passport-size photo, and address proof. Many banks do Aadhaar-based e-KYC or offline Aadhaar verification, depending on rules. If your bank asks you to update KYC, do it on time, because some accounts can be restricted if KYC is not updated. Always submit documents directly to the bank or through an official bank channel. Do not hand over your Aadhaar or PAN to unknown agents. Also, remember: banks do not ask for OTP or PIN to “update KYC.” If someone asks, it is likely a scam.",
+    "source": "https://www.rbi.org.in/",
     "domain": "finance",
     "language": "en"
   },
   {
-    "text": "If someone calls and says your bank account will be blocked, be careful. Banks do not ask for OTP, PIN, or remote app install. Cut the call and contact the bank using the number on your passbook or official website. Report fraud quickly to 1930.",
-    "source": "seed-hackathon",
+    "text": "If someone calls you and says your bank account will be blocked, or you won a prize, be careful. Scammers often try to make you share OTP, UPI PIN, or ask you to install a remote-control app. Banks and government offices will not ask for your OTP or PIN on a call. If you get such a call, hang up and call the bank number printed on your passbook, debit card, or the official website. If you clicked a suspicious link or shared any details, act quickly: call 1930 (National Cyber Crime Helpline) and inform your bank to block the card or freeze the account if needed. Save screenshots and transaction details. For UPI, remember you should only enter your PIN when you are paying, not when you are receiving money.",
+    "source": "https://cybercrime.gov.in/",
     "domain": "finance",
     "language": "en"
   },
   {
-    "text": "Many scholarships for students are available through state portals and the National Scholarship Portal. Keep Aadhaar, bank account details, school ID, and marksheets ready. Apply before the deadline and save the application number for tracking.",
-    "source": "seed-hackathon",
+    "text": "Skill India and PMKVY (Pradhan Mantri Kaushal Vikas Yojana) offer vocational training so you can learn job skills like electrician work, tailoring, beauty services, computer basics, retail, and more. Many courses are free or low-cost under the scheme, depending on the training partner and your eligibility. To enroll, you can search for nearby training centres on the Skill India/PMKVY website or visit a Common Service Centre (CSC) and ask them to help you find centres in your district. Carry basic documents like Aadhaar and a photo. Before joining, ask simple questions: course duration, class timing, certificate provided, and whether they support placement or apprenticeships. Choose a course that fits your interest and local job opportunities. If you are unsure which course to pick, tell the centre what work you want and ask for guidance based on your education level.",
+    "source": "https://www.pmkvyofficial.org/",
     "domain": "education",
     "language": "en"
   },
   {
-    "text": "Skill India training can help with jobs in areas like tailoring, electrician work, or computer basics. Ask at a local training center or CSC about courses near you. Choose a course with placement support and keep your ID documents ready for enrollment.",
-    "source": "seed-hackathon",
+    "text": "The National Scholarship Portal (NSP) is a one-stop website where many scholarships are listed for school and college students across India. There are scholarships for SC, ST, OBC, minorities, and other categories, depending on the scheme. To apply, you generally need Aadhaar, a bank account in the student’s name (or as required), school/college details, marksheets, and income/caste certificates if the scholarship asks for them. Create an account on the portal, fill details carefully, and upload documents clearly. After submitting, save the application number and take a printout or screenshot. Many applications need verification by the school/college, so follow up with them if the status shows pending verification. Apply before the deadline. If you do not have internet access, a nearby CSC can help you apply, but always verify the portal address and keep receipts.",
+    "source": "https://scholarships.gov.in/",
     "domain": "education",
     "language": "en"
   }
