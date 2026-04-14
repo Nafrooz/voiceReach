@@ -20,9 +20,11 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
-    settings = get_settings()
-    app = FastAPI(title=settings.app_name, lifespan=lifespan)
-    app.include_router(api_router, prefix=settings.api_v1_prefix)
+    # Settings are still loaded here so env validation happens on startup.
+    _ = get_settings()
+    app = FastAPI(title="voicereach", lifespan=lifespan)
+    # Config no longer defines a version prefix; routes define full paths.
+    app.include_router(api_router)
     return app
 
 
