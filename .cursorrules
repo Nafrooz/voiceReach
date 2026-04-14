@@ -1,0 +1,177 @@
+# ============================================================
+# .cursorrules — VoiceReach | Vapi + Qdrant + Groq (FREE STACK)
+# HackBLR | Problem 3: Voice AI for Accessibility & Societal Impact
+# Total API cost: $0
+# ============================================================
+
+## STACK IDENTITY
+Backend   : FastAPI 0.110 + Python 3.11
+LLM       : Groq API — llama-3.3-70b-versatile (FREE, no credit card required)
+LLM fast  : Groq API — llama-3.1-8b-instant (for classification tasks only)
+Vector DB : Qdrant Cloud free tier — AsyncQdrantClient ONLY
+Embeddings: sentence-transformers/paraphrase-multilingual-mpnet-base-v2 (local, free)
+Voice STT : Vapi + Deepgram multilingual (hackathon provided)
+Voice TTS : Vapi + ElevenLabs (hackathon provided)
+Frontend  : React + Vite + Tailwind (TypeScript strict)
+Deploy    : Railway.app free tier
+
+## NON-NEGOTIABLE RULES
+- NEVER import openai, anthropic, cohere, or any paid LLM library — use groq SDK ONLY
+- NEVER hardcode API keys — all secrets via pydantic-settings from .env
+- NEVER call Qdrant synchronously — AsyncQdrantClient always
+- NEVER reinitialize SentenceTransformer per request — module-level singleton only
+- NEVER put business logic in route handlers — routes call services only
+- NEVER use bare except: — always catch specific exception types
+- NEVER return a non-spoken string from the Vapi webhook — result must be speakable text
+
+## GROQ-SPECIFIC RULES
+- Primary model   : llama-3.3-70b-versatile   (best free quality, 70B params)
+- Fast model      : llama-3.1-8b-instant       (domain classification, quick yes/no)
+- max_tokens      : 150 for voice (spoken answers must fit in ~10 seconds of speech)
+- temperature     : 0.3 for RAG responses (factual consistency)
+- temperature     : 0.0 for classification (deterministic)
+- Wrap ALL Groq calls in tenacity @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=4))
+- Free tier rate limit is ~30 req/min — make MAX 2 Groq calls per webhook request
+  Call 1: classify_domain() — llama-3.1-8b-instant, max_tokens=5
+  Call 2: generate_rag_response() — llama-3.3-70b-versatile, max_tokens=150
+- Log every Groq call: model, input_tokens, output_tokens, latency_ms
+- Install: pip install groq==0.5.0 (OpenAI-compatible SDK)
+
+## QDRANT RULES
+- ALWAYS use AsyncQdrantClient — never the synchronous QdrantClient
+- Collection names MUST come from settings — never hardcoded strings
+- Vector size MUST be 768 — matches paraphrase-multilingual-mpnet-base-v2 output
+- Distance: COSINE for all collections
+- score_threshold: 0.55 — do not return irrelevant chunks to the LLM
+- Batch upserts in chunks of 100 points maximum per call
+- Use scroll() for history/pagination — not search with large limit
+- Handle QdrantException: log + return spoken fallback, never crash webhook
+
+## VAPI WEBHOOK RULES
+- ALWAYS validate HMAC-SHA256 signature on every request — return HTTP 403 if invalid
+  Header: x-vapi-signature | Secret: settings.VAPI_SECRET
+- Function name in Python code MUST match vapi_assistant_config.json exactly
+  Correct: "query_knowledge_base"
+- Return format MUST be exactly: {"result": "plain spoken text here"}
+  Do NOT return JSON objects, lists, or markdown in result
+- Entire webhook handler MUST respond within 8 seconds (Vapi timeout = 10s)
+- On ANY exception: catch it, log it, return {"result": FALLBACK_MESSAGE}
+  FALLBACK_MESSAGE = "I'm sorry, I couldn't find that information. Please visit your nearest Common Service Centre for help."
+- Never let the /webhook/vapi endpoint return a 5xx to Vapi
+
+## ARCHITECTURE LAYERS (strict)
+routes/     → call services only, no business logic, no direct DB access
+services/   → all business logic (Groq, Qdrant, embedding operations)
+models/     → Pydantic schemas only (Request/Response/Schema suffix)
+utils/      → pure functions (chunk_text, detect_language, verify_signature)
+config.py   → pydantic BaseSettings, get_settings() with @lru_cache
+
+## SINGLETON PATTERN FOR EXPENSIVE RESOURCES
+_embedding_service: EmbeddingService | None = None
+_qdrant_service: QdrantService | None = None
+_groq_service: GroqService | None = None
+
+def get_embedding_service() -> EmbeddingService:
+    global _embedding_service
+    if _embedding_service is None:
+        _embedding_service = EmbeddingService()
+    return _embedding_service
+
+Use FastAPI Depends(get_embedding_service) in routes — never instantiate in route handlers.
+
+## NAMING CONVENTIONS
+- Python files:          snake_case.py
+- Python classes:        PascalCase
+- Python functions:      snake_case
+- Constants:             UPPER_SNAKE_CASE (FALLBACK_MESSAGE, VOICE_SYSTEM_PROMPT)
+- Pydantic request:      FooRequest
+- Pydantic response:     FooResponse
+- Route handlers:        verb_noun (get_sessions, ingest_text, handle_webhook)
+- React components:      PascalCase.tsx
+- React hooks:           useCamelCase.ts
+
+## FASTAPI SPECIFICS
+- Use lifespan context manager (not @app.on_event which is deprecated)
+  Startup: load embedding model + create Qdrant collections
+- APIRouter with prefix and tags for every route module
+- response_model on every route decorator
+- CORSMiddleware with allow_origins=["*"] for hackathon (tighten post-hack)
+- GET /health returns {"status": "ok", "version": "1.0.0"}
+
+## SYSTEM PROMPT RULES
+- Store as module-level string constant VOICE_SYSTEM_PROMPT (not inline)
+- Must include: "Respond in same language as user"
+- Must include: "Maximum 80 words" (TTS constraint)
+- Must include: "Start directly with answer, no preambles"
+- Must include: fallback instruction when context lacks answer
+
+## ERROR HANDLING HIERARCHY
+- groq.RateLimitError → tenacity will retry; after 3 attempts → return FALLBACK
+- groq.APIError → log + return FALLBACK
+- QdrantException → log + return FALLBACK (don't crash voice call)
+- langdetect.LangDetectException → silently default to "en"
+- httpx.HTTPError → log + HTTP 503 response
+- All webhook errors → {"result": FALLBACK_MESSAGE} always
+
+## PERFORMANCE TARGETS (voice = latency critical)
+- Embedding inference  : < 50ms  (local model, pre-loaded singleton)
+- Qdrant semantic search: < 300ms p95
+- Groq LLaMA 3.3 70B  : < 1500ms p95 (LPU hardware advantage)
+- Groq classify (8B)   : < 200ms p95
+- Total webhook latency : < 4000ms p95 (6s safety margin before Vapi timeout)
+
+## TESTING RULES
+- Write tests for EVERY public method in every service class
+- Mock Groq: from unittest.mock import MagicMock, patch
+- Use QdrantClient(":memory:") for integration tests (no cloud required)
+- All async tests: pytest-asyncio with asyncio_mode="auto" in pytest.ini
+- Test naming: test_<function_name>_<scenario>_<expected_result>
+  Example: test_classify_domain_unknown_input_returns_general
+- Minimum 80% line coverage: pytest --cov=app --cov-report=term-missing
+
+## SEED DATA REQUIREMENTS (critical for demo)
+- data/knowledge_base/seed_data.json MUST have exactly 20 documents
+- Distribution: healthcare(8) + government(6) + finance(4) + education(2)
+- All content India-specific (PM-JAY, PM Kisan, Jan Dhan Yojana, PMKVY)
+- Each entry: {text: str, source: str, domain: str, language: str}
+- Text: 150-200 words, simple English, no jargon
+- POST /api/v1/ingest/seed MUST work before demo
+
+## FORBIDDEN IMPORTS — DO NOT USE THESE
+- openai          → use groq (OpenAI-compatible, free)
+- anthropic       → use groq
+- cohere          → use groq
+- langchain       → implement directly (overkill for hackathon)
+- langchain_groq  → use groq SDK directly
+- redis           → use Qdrant sessions collection instead
+- celery          → use FastAPI BackgroundTasks
+
+## DOCKER/DEPLOY RULES
+- Pre-download embedding model in Dockerfile at BUILD TIME:
+  RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('...')"
+- This avoids 2-minute cold start during demo
+- railway.toml must have healthcheckPath = "/health"
+- All env vars injected at runtime via Railway environment settings
+
+## COMMIT MESSAGE FORMAT
+type(scope): short description (max 72 chars)
+
+Types:  feat | fix | test | refactor | docs | chore | perf
+Scopes: vapi | qdrant | groq | embedding | ingest | frontend | deploy | seed
+
+Examples:
+  feat(groq): add LLaMA 3.3 70B RAG response generation
+  feat(vapi): implement HMAC signature validation on webhook
+  fix(qdrant): handle connection timeout with tenacity retry
+  test(groq): mock Groq client for classify_domain tests
+  feat(seed): add 20 India-specific knowledge base documents
+
+## DEMO-CRITICAL CHECKLIST (verify before presentation)
+[ ] POST /api/v1/ingest/seed returns chunks_ingested > 0
+[ ] English query returns correct English response
+[ ] Hindi query returns response IN HINDI (not English)
+[ ] Response is ≤ 80 words (count manually)
+[ ] /demo page shows retrieved context chunks from Qdrant
+[ ] Vapi serverUrl points to Railway URL (not localhost)
+[ ] HMAC validation working (wrong secret → 403)
+[ ] Session memory: 2nd query in same call has context from 1st
