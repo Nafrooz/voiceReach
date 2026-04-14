@@ -1,19 +1,115 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+import json
+import re
 
-from app.models.schemas import IngestRequest, IngestResponse
+import httpx
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
-router = APIRouter()
+from app.services.embedding_service import get_embedding_service
+from app.services.qdrant_service import get_qdrant_service
+from app.utils.text_processor import chunk_text
+
+router = APIRouter(prefix="/ingest", tags=["ingest"])
 
 
-@router.post("/ingest/documents", response_model=IngestResponse)
-async def ingest_documents(body: IngestRequest) -> IngestResponse:
-    """
-    Ingest documents into the knowledge base (placeholder).
-    """
-    _ = body
-    return IngestResponse(ok=True, ingested=0)
+class TextIngestRequest(BaseModel):
+    text: str
+    source: str
+    domain: str
+    language: str = "en"
+    # healthcare | government | finance | education
+
+
+class UrlIngestRequest(BaseModel):
+    url: str
+    domain: str
+
+
+@router.post("/text")
+async def ingest_text(
+    req: TextIngestRequest,
+    embed_svc=Depends(get_embedding_service),
+    qdrant_svc=Depends(get_qdrant_service),
+):
+    chunks = chunk_text(req.text, chunk_size=300, overlap=50)
+    vectors = await embed_svc.embed_batch(chunks)
+    docs = [
+        {
+            "vector": v,
+            "text": c,
+            "source": req.source,
+            "domain": req.domain,
+            "language": req.language,
+        }
+        for c, v in zip(chunks, vectors)
+    ]
+    n = await qdrant_svc.upsert_documents(docs)
+    return {"chunks_ingested": n}
+
+
+@router.post("/url")
+async def ingest_url(
+    req: UrlIngestRequest,
+    embed_svc=Depends(get_embedding_service),
+    qdrant_svc=Depends(get_qdrant_service),
+):
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.get(req.url)
+        r.raise_for_status()
+
+    text = re.sub(r"<[^>]+>", "", r.text)  # strip HTML tags
+    from langdetect import detect
+
+    lang = detect(text[:500])
+    chunks = chunk_text(text)
+    vectors = await embed_svc.embed_batch(chunks)
+    docs = [
+        {
+            "vector": v,
+            "text": c,
+            "source": req.url,
+            "domain": req.domain,
+            "language": lang,
+        }
+        for c, v in zip(chunks, vectors)
+    ]
+    n = await qdrant_svc.upsert_documents(docs)
+    return {"chunks_ingested": n, "language_detected": lang}
+
+
+@router.post("/seed")
+async def seed_knowledge_base(
+    embed_svc=Depends(get_embedding_service),
+    qdrant_svc=Depends(get_qdrant_service),
+):
+    try:
+        with open("data/knowledge_base/seed_data.json") as f:
+            items = json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+    # Support either a list of docs OR {"documents":[...]}.
+    if isinstance(items, dict) and isinstance(items.get("documents"), list):
+        items = items["documents"]
+
+    total = 0
+    for item in items:
+        chunks = chunk_text(item["text"])
+        vectors = await embed_svc.embed_batch(chunks)
+        docs = [
+            {
+                "vector": v,
+                "text": c,
+                "source": item["source"],
+                "domain": item["domain"],
+                "language": item.get("language", "en"),
+            }
+            for c, v in zip(chunks, vectors)
+        ]
+        total += await qdrant_svc.upsert_documents(docs)
+    return {"total_chunks_ingested": total, "documents_processed": len(items)}
 
 
 @router.post("/ingest/reset", response_model=IngestResponse)
