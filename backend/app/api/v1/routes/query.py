@@ -1,4 +1,5 @@
 from __future__ import annotations
+import time
 
 from fastapi import APIRouter, Depends
 
@@ -18,6 +19,7 @@ async def query_kb(
     qdrant_svc=Depends(get_qdrant_service),
     groq_svc=Depends(get_groq_service),
 ) -> QueryResponse:
+    t_start = time.perf_counter()
     language = detect_language(body.query)
 
     query_vector = await embed_svc.embed_text(body.query)
@@ -43,15 +45,18 @@ async def query_kb(
         language=language,
     )
 
-    if body.user_id and query_vector:
-        await qdrant_svc.store_session(
-            user_id=body.user_id,
-            query=body.query,
-            response=answer,
-            vector=query_vector,
-            domain=domain,
-            language=language,
-        )
+    latency_ms = int((time.perf_counter() - t_start) * 1000)
+
+    user_id = body.user_id or "anonymous"
+    await qdrant_svc.store_session(
+        user_id=user_id,
+        query=body.query,
+        response=answer,
+        vector=query_vector,
+        domain=domain,
+        language=language,
+        latency_ms=latency_ms,
+    )
 
     sources = [
         Source(

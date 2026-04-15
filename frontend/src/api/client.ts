@@ -41,3 +41,25 @@ export async function ingestSeed() {
   return data;
 }
 
+export type SessionRow = {
+  timestamp: string;
+  query: string;
+  language: string;
+  domain: string;
+  latency_ms: number;
+  user_id?: string;
+};
+
+export type DashboardStats = {
+  total_queries_today: number;
+  avg_response_time_ms: number;
+  languages_detected: number;
+  domains_served: number;
+  recent: SessionRow[];
+};
+
+export async function fetchDashboard(): Promise<DashboardStats> {
+  const { data } = await api.get<DashboardStats>("/sessions/all");
+  return data;
+}
+

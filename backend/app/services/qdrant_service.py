@@ -81,7 +81,7 @@ class QdrantService:
             with_payload=True,
         )
 
-    async def store_session(self, user_id, query, response, vector, domain, language):
+    async def store_session(self, user_id, query, response, vector, domain, language, latency_ms: int = 0):
         from datetime import datetime
 
         point = PointStruct(
@@ -93,6 +93,7 @@ class QdrantService:
                 "response": response,
                 "domain": domain,
                 "language": language,
+                "latency_ms": latency_ms,
                 "timestamp": datetime.utcnow().isoformat(),
             },
         )
@@ -111,6 +112,14 @@ class QdrantService:
             with_payload=True,
         )
         return [r.payload for r in results]
+
+    async def get_all_sessions(self, limit: int = 100) -> list[dict]:
+        results, _ = await self._client.scroll(
+            collection_name=self._settings.COLLECTION_SESSIONS,
+            limit=limit,
+            with_payload=True,
+        )
+        return [r.payload for r in results if r.payload]
 
 
 _service: QdrantService | None = None
