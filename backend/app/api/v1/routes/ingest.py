@@ -86,7 +86,7 @@ async def seed_knowledge_base(
     qdrant_svc=Depends(get_qdrant_service),
 ):
     try:
-        seed_path = Path(__file__).resolve().parents[5] / "data" / "knowledge_base" / "seed_data.json"
+        seed_path = Path(__file__).resolve().parents[4] / "data" / "knowledge_base" / "seed_data.json"
         items = json.loads(seed_path.read_text(encoding="utf-8"))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e

@@ -8,6 +8,7 @@ from qdrant_client.models import (
     FieldCondition,
     Filter,
     MatchValue,
+    PayloadSchemaType,
     PointStruct,
     ScoredPoint,
     VectorParams,
@@ -32,6 +33,12 @@ class QdrantService:
                         distance=Distance.COSINE,
                     ),
                 )
+        # Ensure keyword index on domain exists for filtered search
+        await self._client.create_payload_index(
+            collection_name=self._settings.COLLECTION_KNOWLEDGE,
+            field_name="domain",
+            field_schema=PayloadSchemaType.KEYWORD,
+        )
 
     async def upsert_documents(self, docs: list[dict]) -> int:
         """docs: [{vector, text, source, domain, language}]"""
