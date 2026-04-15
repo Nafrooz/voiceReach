@@ -9,6 +9,14 @@ from app.services.qdrant_service import get_qdrant_service
 router = APIRouter()
 
 
+@router.get("/knowledge/sources")
+async def get_knowledge_sources(qdrant_svc=Depends(get_qdrant_service)):
+    sources = await qdrant_svc.get_knowledge_sources()
+    total_chunks = sum(s["chunk_count"] for s in sources)
+    return {"sources": sources, "total_chunks": total_chunks}
+
+
+
 @router.get("/sessions/all")
 async def get_all_sessions(qdrant_svc=Depends(get_qdrant_service)):
     sessions = await qdrant_svc.get_all_sessions(limit=200)

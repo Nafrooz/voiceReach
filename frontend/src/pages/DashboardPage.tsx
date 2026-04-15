@@ -68,6 +68,7 @@ export default function DashboardPage() {
                   <th className="py-2 pr-4 font-semibold">query preview</th>
                   <th className="py-2 pr-4 font-semibold">language</th>
                   <th className="py-2 pr-4 font-semibold">domain</th>
+                  <th className="py-2 pr-4 font-semibold">status</th>
                   <th className="py-2 pr-0 font-semibold">latency</th>
                 </tr>
               </thead>
@@ -78,7 +79,7 @@ export default function DashboardPage() {
                       {row.timestamp ? row.timestamp.replace("T", " ").slice(0, 19) : "—"}
                     </td>
                     <td className="py-3 pr-4">
-                      <div className="max-w-[42rem] truncate">{row.query}</div>
+                      <div className="max-w-[36rem] truncate">{row.query}</div>
                     </td>
                     <td className="py-3 pr-4">
                       <Badge tone="slate">{(row.language ?? "?").toUpperCase()}</Badge>
@@ -87,6 +88,17 @@ export default function DashboardPage() {
                       <Badge tone={domainTone(row.domain) as any}>
                         {row.domain ? row.domain.charAt(0).toUpperCase() + row.domain.slice(1) : "—"}
                       </Badge>
+                    </td>
+                    <td className="py-3 pr-4">
+                      {row.answered === false ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-950/60 px-2 py-0.5 text-xs font-semibold text-red-400">
+                          Couldn't answer due to lack of data
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-950/60 px-2 py-0.5 text-xs font-semibold text-green-400">
+                          Answered
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 pr-0 whitespace-nowrap">
                       {row.latency_ms ? `${row.latency_ms} ms` : "—"}

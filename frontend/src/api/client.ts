@@ -47,6 +47,7 @@ export type SessionRow = {
   language: string;
   domain: string;
   latency_ms: number;
+  answered?: boolean;
   user_id?: string;
 };
 
@@ -60,6 +61,31 @@ export type DashboardStats = {
 
 export async function fetchDashboard(): Promise<DashboardStats> {
   const { data } = await api.get<DashboardStats>("/sessions/all");
+  return data;
+}
+
+export type KnowledgeSource = {
+  source: string;
+  domain: string;
+  language: string;
+  chunk_count: number;
+};
+
+export type KnowledgeSources = {
+  sources: KnowledgeSource[];
+  total_chunks: number;
+};
+
+export async function fetchKnowledgeSources(): Promise<KnowledgeSources> {
+  const { data } = await api.get<KnowledgeSources>("/knowledge/sources");
+  return data;
+}
+
+export async function ingestUrl(body: { url: string; domain: string }) {
+  const { data } = await api.post<{ chunks_ingested: number; language_detected: string }>(
+    "/ingest/url",
+    body
+  );
   return data;
 }
 

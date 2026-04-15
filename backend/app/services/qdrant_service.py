@@ -81,7 +81,7 @@ class QdrantService:
             with_payload=True,
         )
 
-    async def store_session(self, user_id, query, response, vector, domain, language, latency_ms: int = 0):
+    async def store_session(self, user_id, query, response, vector, domain, language, latency_ms: int = 0, answered: bool = True):
         from datetime import datetime
 
         point = PointStruct(
@@ -94,6 +94,7 @@ class QdrantService:
                 "domain": domain,
                 "language": language,
                 "latency_ms": latency_ms,
+                "answered": answered,
                 "timestamp": datetime.utcnow().isoformat(),
             },
         )
@@ -112,6 +113,29 @@ class QdrantService:
             with_payload=True,
         )
         return [r.payload for r in results]
+
+    async def get_knowledge_sources(self) -> list[dict]:
+        """Return unique sources with chunk counts and metadata."""
+        results, _ = await self._client.scroll(
+            collection_name=self._settings.COLLECTION_KNOWLEDGE,
+            limit=1000,
+            with_payload=True,
+        )
+        # Aggregate by source
+        sources: dict[str, dict] = {}
+        for r in results:
+            if not r.payload:
+                continue
+            src = r.payload.get("source", "unknown")
+            if src not in sources:
+                sources[src] = {
+                    "source": src,
+                    "domain": r.payload.get("domain", "general"),
+                    "language": r.payload.get("language", "en"),
+                    "chunk_count": 0,
+                }
+            sources[src]["chunk_count"] += 1
+        return sorted(sources.values(), key=lambda x: x["domain"])
 
     async def get_all_sessions(self, limit: int = 100) -> list[dict]:
         results, _ = await self._client.scroll(

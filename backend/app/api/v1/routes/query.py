@@ -34,6 +34,23 @@ async def query_kb(
 
     context_chunks = [h.payload.get("text", "") for h in hits if h.payload]
 
+    if not context_chunks:
+        latency_ms = int((time.perf_counter() - t_start) * 1000)
+        await qdrant_svc.store_session(
+            user_id=body.user_id or "anonymous",
+            query=body.query,
+            response="",
+            vector=query_vector,
+            domain=domain,
+            language=language,
+            latency_ms=latency_ms,
+            answered=False,
+        )
+        return QueryResponse(
+            answer="I don't have that information right now. Please visit your nearest Common Service Centre for help.",
+            sources=[],
+        )
+
     history: list[dict] = []
     if body.user_id:
         history = await qdrant_svc.get_user_history(body.user_id)
@@ -56,6 +73,7 @@ async def query_kb(
         domain=domain,
         language=language,
         latency_ms=latency_ms,
+        answered=True,
     )
 
     sources = [
