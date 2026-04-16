@@ -21,6 +21,21 @@ CLASSIFY_PROMPT = (
     "Classify this query into exactly one word — healthcare, government, finance, or education:\n{query}"
 )
 
+DETECT_LANG_PROMPT = (
+    "Detect the PRIMARY language of this text. "
+    "The text may mix Indian language words with English (code-switching is common in Indian speech). "
+    "If ANY Telugu words are present (nenu, naku, ela, cheyali, account, undi, ledha, okka, anni, cheppandi, cheyandi, open, meeru, mee, memu, manam, oka), reply: te\n"
+    "If ANY Hindi words are present (mujhe, kaise, kya, karein, chahiye, aur, bhi, yojana, karo, iska, uska, hai, hoga, mera, apna), reply: hi\n"
+    "If ANY Tamil words are present (enakku, eppadi, enna, pannanum, venum, irukku, solla, uதவி), reply: ta\n"
+    "If the text is purely English with no Indic words, reply: en\n"
+    "Reply with ONLY one of: en, hi, te, ta — no explanation.\n"
+    "Text: {query}"
+)
+
+TRANSLATE_PROMPT = (
+    "Translate the following text to English. Output only the translation, nothing else.\nText: {query}"
+)
+
 
 class GroqService:
     def __init__(self, settings):
@@ -68,6 +83,27 @@ class GroqService:
             messages=messages,
             max_tokens=self._settings.MAX_RESPONSE_TOKENS,
             temperature=0.3,
+        )
+        return resp.choices[0].message.content.strip()
+
+    async def detect_language_llm(self, text: str) -> str:
+        """Use LLM to detect language — handles romanized Indic text that script detection misses."""
+        resp = self._client.chat.completions.create(
+            model=self._settings.GROQ_FAST_MODEL,
+            messages=[{"role": "user", "content": DETECT_LANG_PROMPT.format(query=text[:300])}],
+            max_tokens=5,
+            temperature=0,
+        )
+        lang = resp.choices[0].message.content.strip().lower()
+        return lang if lang in {"en", "hi", "te", "ta"} else "en"
+
+    async def translate_to_english(self, text: str) -> str:
+        """Translate query to English for better embedding retrieval against English KB."""
+        resp = self._client.chat.completions.create(
+            model=self._settings.GROQ_FAST_MODEL,
+            messages=[{"role": "user", "content": TRANSLATE_PROMPT.format(query=text)}],
+            max_tokens=100,
+            temperature=0,
         )
         return resp.choices[0].message.content.strip()
 

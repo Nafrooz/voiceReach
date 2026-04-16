@@ -163,7 +163,7 @@ class QdrantService:
             )
 
         # Apply cosine similarity threshold as quality gate after RRF ranking
-        COSINE_THRESHOLD = 0.45
+        COSINE_THRESHOLD = 0.40
         filtered_ids = [
             pid for pid in sorted_ids
             if id_to_cosine.get(pid, 0.0) >= COSINE_THRESHOLD

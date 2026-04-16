@@ -66,9 +66,11 @@ async def vapi_webhook(
             user_id = params.get("user_id", call_id)
 
             try:
-                logger.info("vapi_query query=%r user=%s", query, user_id)
+                logger.info("=" * 60)
+                logger.info("TRANSCRIPTION: %r", query)
+                logger.info("=" * 60)
                 res = await query_svc.query_knowledge_base(QueryRequest(user_id=user_id, query=query))
-                logger.info("vapi_query domain=%s lang=%s answered=%s answer=%r", res.domain, res.language, res.answered, res.answer[:80])
+                logger.info("── RESPONSE ──► lang=%s domain=%s answered=%s | %r", res.language, res.domain, res.answered, res.answer[:120])
                 results.append({"toolCallId": tool_call_id, "result": res.answer})
             except Exception as exc:
                 logger.error("vapi_webhook error: %s", exc, exc_info=True)

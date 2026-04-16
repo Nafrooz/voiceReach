@@ -31,19 +31,32 @@ class QueryService:
     async def query_knowledge_base(self, body: QueryRequest) -> QueryResponse:
         t_start = time.perf_counter()
         query = body.query.strip()
+
+        # Script-based detection first; fall back to LLM for romanized Indic text
         language = detect_language(query)
+        if language == "en":
+            language = await self._groq.detect_language_llm(query)
+        _log.info("── LANGUAGE ──► detected=%s", language)
+
         user_id = body.user_id or "anonymous"
 
         # Use fast model for coarse domain routing. If it returns "general",
         # we avoid filtering by domain to maximize retrieval recall.
         domain = await self._groq.classify_domain(query)
 
-        q_vec = await self._embed.embed_text(query)
+        # Translate non-English queries to English for better embedding retrieval.
+        # Knowledge base is in English; romanized/native Indic text embeds poorly against it.
+        retrieval_query = query
+        if language != "en":
+            retrieval_query = await self._groq.translate_to_english(query)
+            _log.info("── TRANSLATION ──► %r  →  %r", query[:80], retrieval_query[:80])
+
+        q_vec = await self._embed.embed_text(retrieval_query)
         history = await self._qdrant.get_user_history(user_id) if user_id else []
 
         results = await self._qdrant.hybrid_search(
             query_vector=q_vec,
-            query_text=query,
+            query_text=retrieval_query,
             domain=None if domain == "general" else domain,
             top_k=body.top_k,
         )
@@ -90,6 +103,7 @@ class QueryService:
             )
 
         answer = await self._groq.generate_rag_response(query=query, context_chunks=chunks, history=history, language=language)
+        _log.info("── GROQ RESPONSE ──► %r", answer[:150])
 
         # Store session memory for follow-up questions.
         try:
