@@ -35,10 +35,26 @@ class GroqService:
         history: list[dict],
         language: str,
     ) -> str:
-        _ = language  # language is enforced by system prompt; kept for call-site clarity
+        lang = (language or "en").lower().strip()
+        lang_name = {"en": "English", "hi": "Hindi", "te": "Telugu", "ta": "Tamil"}.get(lang, "English")
+        lang_rule = (
+            f"OUTPUT LANGUAGE OVERRIDE: Respond ONLY in {lang_name}.\n"
+            + (
+                "Use Telugu script (తెలుగు లిపి) only."
+                if lang == "te"
+                else "Use Tamil script (தமிழ் எழுத்து) only."
+                if lang == "ta"
+                else "Use Devanagari script (देवनागरी) only."
+                if lang == "hi"
+                else "Use standard English."
+            )
+        )
 
         context = "\n---\n".join(context_chunks[:5])
-        messages: list[dict[str, str]] = [{"role": "system", "content": VOICE_SYSTEM_PROMPT}]
+        messages: list[dict[str, str]] = [
+            {"role": "system", "content": VOICE_SYSTEM_PROMPT},
+            {"role": "system", "content": lang_rule},
+        ]
 
         # Add last 2 history turns
         for h in history[-2:]:

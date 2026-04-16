@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
@@ -16,8 +16,24 @@ function domainTone(domain: string) {
       return "amber";
     case "education":
       return "purple";
+    case "general":
+      return "slate";
     default:
       return "slate";
+  }
+}
+
+function languageLabel(code: string | null) {
+  switch ((code || "").toLowerCase()) {
+    case "hi":
+      return "Hindi";
+    case "te":
+      return "Telugu";
+    case "ta":
+      return "Tamil";
+    case "en":
+    default:
+      return "English";
   }
 }
 
@@ -25,6 +41,8 @@ export default function DemoPage() {
   const { pushToast } = useToast();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [voiceStarting, setVoiceStarting] = useState(false);
+  const [lastVoiceEvent, setLastVoiceEvent] = useState<string>("");
 
   const [language, setLanguage] = useState<string | null>(null);
   const [domain, setDomain] = useState<string | null>(null);
@@ -39,6 +57,56 @@ export default function DemoPage() {
     return new Vapi(vapiPublicKey);
   }, [vapiPublicKey]);
 
+  useEffect(() => {
+    if (!vapi) return;
+
+    const onCallStart = () => {
+      setVoiceStarting(false);
+      setLastVoiceEvent("call-start");
+      pushToast("Voice connected. You can start speaking.");
+    };
+    const onCallEnd = () => {
+      setVoiceStarting(false);
+      setLastVoiceEvent("call-end");
+      pushToast("Voice ended.");
+    };
+    const onCallStartFailed = (evt: any) => {
+      setVoiceStarting(false);
+      const stage = typeof evt?.stage === "string" ? evt.stage : "unknown";
+      const err = typeof evt?.error === "string" ? evt.error : "unknown error";
+      setLastVoiceEvent(`call-start-failed: ${stage}: ${err}`);
+      pushToast(`Voice start failed (${stage}): ${err}`);
+    };
+    const onError = (evt: any) => {
+      setVoiceStarting(false);
+      const message =
+        typeof evt?.error?.message === "string"
+          ? evt.error.message
+          : typeof evt?.message === "string"
+            ? evt.message
+            : typeof evt?.error === "string"
+              ? evt.error
+              : "Unknown voice error";
+      setLastVoiceEvent(`error: ${message}`);
+      pushToast(`Voice error: ${message}`);
+    };
+
+    // Vapi Web SDK events (see @vapi-ai/web docs)
+    vapi.on("call-start", onCallStart);
+    vapi.on("call-end", onCallEnd);
+    vapi.on("call-start-failed", onCallStartFailed);
+    vapi.on("error", onError);
+
+    return () => {
+      // The SDK's public types don't expose `off`, but it does expose `removeAllListeners`.
+      // Remove listeners for these events to avoid duplicate toasts on hot reload.
+      vapi.removeAllListeners("call-start");
+      vapi.removeAllListeners("call-end");
+      vapi.removeAllListeners("call-start-failed");
+      vapi.removeAllListeners("error");
+    };
+  }, [vapi, pushToast]);
+
   const runQuery = async (q: string) => {
     setLoading(true);
     try {
@@ -46,13 +114,30 @@ export default function DemoPage() {
       setAnswer(res.answer);
       const texts = (res.sources ?? []).map((s) => s.text).filter(Boolean) as string[];
       setChunks(texts);
-      // Until backend returns these explicitly, use simple heuristics.
-      setLanguage(/[\u0900-\u097F]/.test(q) ? "Hindi" : "English");
-      setDomain(texts.length ? "Knowledge Base" : "General");
+      setLanguage(res.language || "en");
+      setDomain(res.domain || "general");
     } catch (e: any) {
       pushToast(e?.message ?? "Query failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const preflightMic = async (): Promise<boolean> => {
+    if (typeof navigator === "undefined") return true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      pushToast("Your browser does not support microphone access (getUserMedia missing).");
+      return false;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((t) => t.stop());
+      return true;
+    } catch (e: any) {
+      const name = typeof e?.name === "string" ? e.name : "MicError";
+      const msg = typeof e?.message === "string" ? e.message : "Microphone permission denied";
+      pushToast(`Microphone blocked: ${name} (${msg})`);
+      return false;
     }
   };
 
@@ -69,20 +154,45 @@ export default function DemoPage() {
         <div className="mt-6 flex flex-col items-center gap-4">
           <Button
             variant="primary"
-            disabled={!vapi || !vapiAssistantId}
-            onClick={() => {
-              if (!vapi) return;
-              if (!vapiAssistantId) return;
-              pushToast("Starting voice…");
-              vapi.start(vapiAssistantId);
+            disabled={!vapi || !vapiAssistantId || voiceStarting}
+            onClick={async () => {
+              if (!vapi) {
+                pushToast("Set VITE_VAPI_PUBLIC_KEY to enable voice.");
+                return;
+              }
+              if (!vapiAssistantId) {
+                pushToast("Set VITE_VAPI_ASSISTANT_ID to enable voice.");
+                return;
+              }
+
+              const ok = await preflightMic();
+              if (!ok) return;
+
+              setVoiceStarting(true);
+              pushToast("Starting voice… (check mic permission prompt)");
+              try {
+                setLastVoiceEvent("start() called");
+                await vapi.start(vapiAssistantId);
+              } catch (e: any) {
+                const msg = typeof e?.message === "string" ? e.message : "Failed to start voice";
+                setVoiceStarting(false);
+                setLastVoiceEvent(`start() rejected: ${msg}`);
+                pushToast(`Voice start error: ${msg}`);
+              }
             }}
             className="h-12 w-56"
           >
-            Microphone
+            {voiceStarting ? "Starting…" : "Microphone"}
           </Button>
           <div className="text-xs text-slate-400">
-            Set <span className="font-mono">VITE_VAPI_PUBLIC_KEY</span> and{" "}
-            <span className="font-mono">VITE_VAPI_ASSISTANT_ID</span> to enable browser voice.
+            {!vapiPublicKey || !vapiAssistantId ? (
+              <>
+                Set <span className="font-mono">VITE_VAPI_PUBLIC_KEY</span> and{" "}
+                <span className="font-mono">VITE_VAPI_ASSISTANT_ID</span> to enable browser voice.
+              </>
+            ) : (
+              <>Browser voice is enabled.</>
+            )}
           </div>
 
           <div className="w-full">
@@ -108,7 +218,7 @@ export default function DemoPage() {
         {(answer || chunks.length > 0) && (
           <div className="mt-6">
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              {language && <Badge tone="slate">■ {language}</Badge>}
+              {language && <Badge tone="slate">■ {languageLabel(language)}</Badge>}
               {domain && <Badge tone={domainTone(domain) as any}>■ {domain}</Badge>}
             </div>
 

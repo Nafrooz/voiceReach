@@ -10,6 +10,9 @@ export const api = axios.create({
 
 export type QueryResponse = {
   answer: string;
+  language: string;
+  domain: string;
+  answered: boolean;
   sources: Array<{
     id?: string | null;
     text?: string | null;

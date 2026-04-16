@@ -8,6 +8,19 @@ from app.services.qdrant_service import get_qdrant_service
 
 router = APIRouter()
 
+def _parse_iso(ts: str) -> datetime | None:
+    """
+    Parse ISO8601 timestamps from Qdrant payloads.
+    Supports both timezone-aware and naive strings; naive is treated as UTC.
+    """
+    if not ts:
+        return None
+    try:
+        dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
 
 @router.get("/knowledge/sources")
 async def get_knowledge_sources(qdrant_svc=Depends(get_qdrant_service)):
@@ -22,11 +35,15 @@ async def get_all_sessions(qdrant_svc=Depends(get_qdrant_service)):
     sessions = await qdrant_svc.get_all_sessions(limit=200)
 
     # Sort newest first
-    sessions.sort(key=lambda s: s.get("timestamp", ""), reverse=True)
+    sessions.sort(key=lambda s: _parse_iso(s.get("timestamp", "") or "") or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
 
     # Compute stats
-    today = datetime.now(timezone.utc).date().isoformat()
-    today_sessions = [s for s in sessions if s.get("timestamp", "").startswith(today)]
+    today = datetime.now(timezone.utc).date()
+    today_sessions = []
+    for s in sessions:
+        dt = _parse_iso(s.get("timestamp", "") or "")
+        if dt and dt.date() == today:
+            today_sessions.append(s)
 
     latencies = [s["latency_ms"] for s in sessions if "latency_ms" in s]
     avg_latency = int(sum(latencies) / len(latencies)) if latencies else 0

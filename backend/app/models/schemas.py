@@ -18,6 +18,9 @@ class QueryRequest(BaseModel):
 
 class QueryResponse(BaseModel):
     answer: str
+    language: str = "en"
+    domain: str = "general"
+    answered: bool = True
     sources: list[Source] = Field(default_factory=list)
 
 

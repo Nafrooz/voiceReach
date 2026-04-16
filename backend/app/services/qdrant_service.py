@@ -39,6 +39,12 @@ class QdrantService:
             field_name="domain",
             field_schema=PayloadSchemaType.KEYWORD,
         )
+        # Ensure keyword index on user_id exists for session history filters
+        await self._client.create_payload_index(
+            collection_name=self._settings.COLLECTION_SESSIONS,
+            field_name="user_id",
+            field_schema=PayloadSchemaType.KEYWORD,
+        )
 
     async def upsert_documents(self, docs: list[dict]) -> int:
         """docs: [{vector, text, source, domain, language}]"""
@@ -82,7 +88,7 @@ class QdrantService:
         )
 
     async def store_session(self, user_id, query, response, vector, domain, language, latency_ms: int = 0, answered: bool = True):
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         point = PointStruct(
             id=str(uuid4()),
@@ -95,7 +101,7 @@ class QdrantService:
                 "language": language,
                 "latency_ms": latency_ms,
                 "answered": answered,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         )
         await self._client.upsert(

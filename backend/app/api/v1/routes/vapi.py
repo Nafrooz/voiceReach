@@ -7,9 +7,8 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.config import get_settings
-from app.services.embedding_service import get_embedding_service
-from app.services.groq_service import get_groq_service
-from app.services.qdrant_service import get_qdrant_service
+from app.models.schemas import QueryRequest
+from app.services.query_service import get_query_service
 
 router = APIRouter(prefix="/webhook", tags=["vapi"])
 logger = logging.getLogger(__name__)
@@ -29,9 +28,7 @@ def verify_vapi_signature(body: bytes, signature: str, secret: str) -> bool:
 async def vapi_webhook(
     request: Request,
     settings=Depends(get_settings),
-    embed_svc=Depends(get_embedding_service),
-    qdrant_svc=Depends(get_qdrant_service),
-    groq_svc=Depends(get_groq_service),
+    query_svc=Depends(get_query_service),
 ):
     body = await request.body()
     sig = request.headers.get("x-vapi-signature", "")
@@ -51,19 +48,9 @@ async def vapi_webhook(
         user_id = params.get("user_id", payload["message"].get("call", {}).get("id", "anon"))
 
         try:
-            from app.utils.language_detector import detect_language
-
-            language = detect_language(query)
-            domain = await groq_svc.classify_domain(query)
-            q_vec = await embed_svc.embed_text(query)
-            results = await qdrant_svc.semantic_search(q_vec, domain=domain)
-            chunks = [r.payload["text"] for r in results]
-            history = await qdrant_svc.get_user_history(user_id)
-            response = await groq_svc.generate_rag_response(query, chunks, history, language)
-            r_vec = await embed_svc.embed_text(response)
-            await qdrant_svc.store_session(user_id, query, response, r_vec, domain, language)
-            logger.info("vapi_query user=%s domain=%s lang=%s", user_id, domain, language)
-            return {"result": response}
+            res = await query_svc.query_knowledge_base(QueryRequest(user_id=user_id, query=query))
+            logger.info("vapi_query user=%s domain=%s lang=%s answered=%s", user_id, res.domain, res.language, res.answered)
+            return {"result": res.answer}
         except Exception as exc:
             logger.error("vapi_webhook error: %s", exc, exc_info=True)
             return {"result": FALLBACK}
