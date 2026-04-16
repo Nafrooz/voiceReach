@@ -80,6 +80,36 @@ async def ingest_url(
     return {"chunks_ingested": n, "language_detected": lang}
 
 
+@router.post("/deduplicate")
+async def deduplicate_knowledge_base(
+    qdrant_svc=Depends(get_qdrant_service),
+):
+    """Remove duplicate chunks that have identical text content."""
+    results, _ = await qdrant_svc._client.scroll(
+        collection_name=qdrant_svc._settings.COLLECTION_KNOWLEDGE,
+        limit=2000,
+        with_payload=True,
+        with_vectors=False,
+    )
+    seen: dict[str, str] = {}  # text_hash -> first point id
+    duplicates: list[str] = []
+    for point in results:
+        text = (point.payload or {}).get("text", "")
+        h = str(hash(text))
+        if h in seen:
+            duplicates.append(str(point.id))
+        else:
+            seen[h] = str(point.id)
+
+    if duplicates:
+        await qdrant_svc._client.delete(
+            collection_name=qdrant_svc._settings.COLLECTION_KNOWLEDGE,
+            points_selector=duplicates,
+        )
+
+    return {"duplicates_removed": len(duplicates), "unique_chunks_remaining": len(seen)}
+
+
 @router.post("/seed")
 async def seed_knowledge_base(
     embed_svc=Depends(get_embedding_service),

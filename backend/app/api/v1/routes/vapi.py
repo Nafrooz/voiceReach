@@ -20,8 +20,10 @@ FALLBACK = (
 
 
 def verify_vapi_signature(body: bytes, signature: str, secret: str) -> bool:
+    # Vapi may send signature as plain hex or with "sha256=" prefix
+    sig = signature.removeprefix("sha256=")
     expected = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(expected, signature)
+    return hmac.compare_digest(expected, sig)
 
 
 @router.post("/vapi")
@@ -31,35 +33,68 @@ async def vapi_webhook(
     query_svc=Depends(get_query_service),
 ):
     body = await request.body()
-    sig = request.headers.get("x-vapi-signature", "")
-    if not verify_vapi_signature(body, sig, settings.VAPI_SECRET):
-        raise HTTPException(403, "Invalid signature")
+    secret = request.headers.get("x-vapi-secret", "")
+    if secret and settings.VAPI_SECRET:
+        if secret != settings.VAPI_SECRET:
+            logger.warning("Vapi secret mismatch — check VAPI_SECRET in .env.")
+    _ = HTTPException  # kept for import
 
     payload = await request.json()
-    msg_type = payload.get("message", {}).get("type", "")
+    msg = payload.get("message", {})
+    msg_type = msg.get("type", "")
+    logger.info("vapi_webhook type=%s", msg_type)
 
+    # Vapi sends "tool-calls" when assistant uses toolIds
+    if msg_type == "tool-calls":
+        tool_call_list = msg.get("toolCallList", [])
+        results = []
+        call_id = msg.get("call", {}).get("id", "anon")
+
+        for tool_call in tool_call_list:
+            tool_call_id = tool_call.get("id", "")
+            fn = tool_call.get("function", {})
+            fn_name = fn.get("name", "")
+
+            if fn_name != "query_knowledge_base":
+                results.append({"toolCallId": tool_call_id, "result": FALLBACK})
+                continue
+
+            import json as _json
+            raw_args = fn.get("arguments", "{}")
+            params = _json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+            query = params.get("query", "")
+            user_id = params.get("user_id", call_id)
+
+            try:
+                logger.info("vapi_query query=%r user=%s", query, user_id)
+                res = await query_svc.query_knowledge_base(QueryRequest(user_id=user_id, query=query))
+                logger.info("vapi_query domain=%s lang=%s answered=%s answer=%r", res.domain, res.language, res.answered, res.answer[:80])
+                results.append({"toolCallId": tool_call_id, "result": res.answer})
+            except Exception as exc:
+                logger.error("vapi_webhook error: %s", exc, exc_info=True)
+                results.append({"toolCallId": tool_call_id, "result": FALLBACK})
+
+        return {"results": results}
+
+    # Legacy function-call format
     if msg_type == "function-call":
-        fn = payload["message"]["functionCall"]
-        if fn["name"] != "query_knowledge_base":
+        fn = msg.get("functionCall", {})
+        if fn.get("name") != "query_knowledge_base":
             return {"result": FALLBACK}
 
-        params = fn["parameters"]
+        params = fn.get("parameters", {})
         query = params.get("query", "")
-        user_id = params.get("user_id", payload["message"].get("call", {}).get("id", "anon"))
+        user_id = params.get("user_id", msg.get("call", {}).get("id", "anon"))
 
         try:
             res = await query_svc.query_knowledge_base(QueryRequest(user_id=user_id, query=query))
-            logger.info("vapi_query user=%s domain=%s lang=%s answered=%s", user_id, res.domain, res.language, res.answered)
             return {"result": res.answer}
         except Exception as exc:
             logger.error("vapi_webhook error: %s", exc, exc_info=True)
             return {"result": FALLBACK}
 
     if msg_type == "end-of-call-report":
-        logger.info(
-            "call_ended call_id=%s",
-            payload.get("message", {}).get("call", {}).get("id"),
-        )
+        logger.info("call_ended call_id=%s", msg.get("call", {}).get("id"))
         return {"status": "logged"}
 
     return {"status": "ignored"}

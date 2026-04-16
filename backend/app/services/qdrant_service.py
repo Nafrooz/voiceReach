@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import logging
 from uuid import uuid4
 
 from qdrant_client import AsyncQdrantClient
@@ -7,12 +9,17 @@ from qdrant_client.models import (
     Distance,
     FieldCondition,
     Filter,
+    MatchText,
     MatchValue,
     PayloadSchemaType,
     PointStruct,
     ScoredPoint,
+    TextIndexParams,
+    TokenizerType,
     VectorParams,
 )
+
+_log = logging.getLogger(__name__)
 
 from app.config import get_settings
 
@@ -33,13 +40,25 @@ class QdrantService:
                         distance=Distance.COSINE,
                     ),
                 )
-        # Ensure keyword index on domain exists for filtered search
+        # Keyword index on domain for filtered semantic search
         await self._client.create_payload_index(
             collection_name=self._settings.COLLECTION_KNOWLEDGE,
             field_name="domain",
             field_schema=PayloadSchemaType.KEYWORD,
         )
-        # Ensure keyword index on user_id exists for session history filters
+        # Full-text index on text field for hybrid search
+        await self._client.create_payload_index(
+            collection_name=self._settings.COLLECTION_KNOWLEDGE,
+            field_name="text",
+            field_schema=TextIndexParams(
+                type="text",
+                tokenizer=TokenizerType.WORD,
+                min_token_len=2,
+                max_token_len=20,
+                lowercase=True,
+            ),
+        )
+        # Keyword index on user_id for session history filters
         await self._client.create_payload_index(
             collection_name=self._settings.COLLECTION_SESSIONS,
             field_name="user_id",
@@ -66,26 +85,115 @@ class QdrantService:
 
         return len(points)
 
-    async def semantic_search(
+    async def hybrid_search(
         self,
         query_vector: list[float],
+        query_text: str,
         domain: str | None = None,
         top_k: int = 5,
-        score_threshold: float = 0.55,
     ) -> list[ScoredPoint]:
-        filt = (
+        """Hybrid search: semantic + full-text, reranked with Reciprocal Rank Fusion."""
+        domain_filter = (
             Filter(must=[FieldCondition(key="domain", match=MatchValue(value=domain))])
             if domain
             else None
         )
-        return await self._client.search(
-            collection_name=self._settings.COLLECTION_KNOWLEDGE,
-            query_vector=query_vector,
-            limit=top_k,
-            score_threshold=score_threshold,
-            query_filter=filt,
-            with_payload=True,
+        # Extract keywords (words > 3 chars) for better full-text matching
+        keywords = " ".join(w for w in query_text.split() if len(w) > 3)
+        ft_query = keywords if keywords else query_text
+        text_filters = [FieldCondition(key="text", match=MatchText(text=ft_query))]
+        if domain:
+            text_filters.append(FieldCondition(key="domain", match=MatchValue(value=domain)))
+
+        # Run semantic and full-text searches in parallel
+        semantic_results, ft_results = await asyncio.gather(
+            self._client.search(
+                collection_name=self._settings.COLLECTION_KNOWLEDGE,
+                query_vector=query_vector,
+                limit=top_k * 3,
+                query_filter=domain_filter,
+                with_payload=True,
+            ),
+            self._client.scroll(
+                collection_name=self._settings.COLLECTION_KNOWLEDGE,
+                scroll_filter=Filter(must=text_filters),
+                limit=top_k * 3,
+                with_payload=True,
+                with_vectors=False,
+            ),
         )
+
+        ft_points = ft_results[0]  # scroll returns (points, next_offset)
+
+        _log.info(
+            "hybrid_search domain=%s semantic_hits=%d ft_hits=%d",
+            domain, len(semantic_results), len(ft_points),
+        )
+
+        # Reciprocal Rank Fusion — K=10 tuned for small domain-specific KB (~200 chunks)
+        K = 10
+        rrf: dict[str, float] = {}
+        id_to_payload: dict[str, dict] = {}
+        id_to_cosine: dict[str, float] = {}
+
+        for rank, point in enumerate(semantic_results):
+            pid = str(point.id)
+            rrf[pid] = rrf.get(pid, 0.0) + 1.0 / (K + rank + 1)
+            id_to_payload[pid] = point.payload or {}
+            id_to_cosine[pid] = point.score  # store cosine similarity score
+
+        for rank, point in enumerate(ft_points):
+            pid = str(point.id)
+            rrf[pid] = rrf.get(pid, 0.0) + 1.0 / (K + rank + 1)
+            if pid not in id_to_payload:
+                id_to_payload[pid] = point.payload or {}
+
+        # Sort by RRF score
+        sorted_ids = sorted(rrf, key=lambda x: rrf[x], reverse=True)[:top_k]
+
+        # Log RRF scores and cosine scores for each candidate
+        for rank, pid in enumerate(sorted_ids):
+            cosine = id_to_cosine.get(pid, None)
+            _log.info(
+                "  [%d] rrf=%.4f cosine=%s text_preview=%r",
+                rank + 1,
+                rrf[pid],
+                f"{cosine:.4f}" if cosine is not None else "ft-only",
+                (id_to_payload.get(pid, {}).get("text", "") or "")[:60],
+            )
+
+        # Apply cosine similarity threshold as quality gate after RRF ranking
+        COSINE_THRESHOLD = 0.45
+        filtered_ids = [
+            pid for pid in sorted_ids
+            if id_to_cosine.get(pid, 0.0) >= COSINE_THRESHOLD
+        ]
+
+        cosine_scores = [id_to_cosine.get(pid, 0.0) for pid in sorted_ids]
+        min_needed = min(cosine_scores) if cosine_scores else 0.0
+        max_score = max(cosine_scores) if cosine_scores else 0.0
+        _log.info(
+            "hybrid_search rrf_candidates=%d after_threshold=%d | "
+            "cosine range=[%.4f, %.4f] threshold=%.2f | %s",
+            len(sorted_ids),
+            len(filtered_ids),
+            min_needed,
+            max_score,
+            COSINE_THRESHOLD,
+            "WILL ANSWER" if filtered_ids else "NO ANSWER — raise threshold or lower it",
+        )
+
+        from qdrant_client.models import ScoredPoint as SP
+        return [
+            SP(
+                id=pid,
+                score=round(id_to_cosine[pid], 4),
+                payload=id_to_payload[pid],
+                version=0,
+            )
+            for pid in filtered_ids
+            if id_to_payload.get(pid)
+        ]
 
     async def store_session(self, user_id, query, response, vector, domain, language, latency_ms: int = 0, answered: bool = True):
         from datetime import datetime, timezone

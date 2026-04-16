@@ -76,7 +76,7 @@ export default function DashboardPage() {
                 {stats.recent.map((row, i) => (
                   <tr key={i} className="border-b border-slate-900">
                     <td className="py-3 pr-4 whitespace-nowrap text-slate-400">
-                      {row.timestamp ? row.timestamp.replace("T", " ").slice(0, 19) : "—"}
+                      {row.timestamp ? new Date(row.timestamp).toLocaleString() : "—"}
                     </td>
                     <td className="py-3 pr-4">
                       <div className="max-w-[36rem] truncate">{row.query}</div>

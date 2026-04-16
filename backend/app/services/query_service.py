@@ -41,8 +41,9 @@ class QueryService:
         q_vec = await self._embed.embed_text(query)
         history = await self._qdrant.get_user_history(user_id) if user_id else []
 
-        results = await self._qdrant.semantic_search(
+        results = await self._qdrant.hybrid_search(
             query_vector=q_vec,
+            query_text=query,
             domain=None if domain == "general" else domain,
             top_k=body.top_k,
         )
